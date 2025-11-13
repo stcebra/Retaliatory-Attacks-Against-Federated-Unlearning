@@ -1,0 +1,93 @@
+global:
+  input_size: 600
+  num_classes: 100
+  device: "cuda:0"
+  model_save_dir: "./saved_models"
+  batch_size: 128
+
+training:
+  num_clients: 5
+  num_forget_clients: 1
+  client_data_size: 2000
+  batch_size: 128
+  lr: 0.001
+  num_rounds: 600
+  local_epochs: 1
+  test_split_index: 2000
+  train_stride: 2000
+dataset:
+  path: "data/purchase100.npz"
+  name: 'purchase100'
+
+paths:
+  model_path_before: "saved_models/before_unlearning.pth"
+  model_path_after: "saved_models/after_unlearning.pth"
+  output_path_before: "test_data/MIA_evaluation_before.npz"
+  output_path_after: "test_data/MIA_evaluation_after.npz"
+  attack_model_dir: "pretrained_MIA"
+  attack_model_prefix: "pretrained_MIA_model_"
+
+stage1:
+  shadow_data_range: [0, 15000]
+  shadow_K: 20
+  split_test_size: 0.4
+  split_train2_size: 0.7
+  train_clients: 4
+  shadow_epochs: 500
+  shadow_lr: 0.0005
+  shadow_batch_size: 128
+  shadow_save_dir: shadow_models
+  shadow_attack_prefix: dual_attack_data_
+  shadow_model_full_prefix: shadow_model_{}_full.pth
+  shadow_model_partial_prefix: shadow_model_{}_partial.pth
+  seed: 42
+
+training_attack:
+  attack_epochs: 100
+  attack_lr: 0.001
+  device: "cuda:0"
+
+attack:
+  input_dim: 200
+  num_output_classes: 3
+  model: "AttackModel"
+  data_prefix: "./shadow_models/dual_attack_data_"
+  output_dir: "./attack_models"
+
+stage1_eval:
+  output_path: "./stage2_eval/eval.npz"
+
+stage2:
+  num_candidates: 2000
+
+stage2_search:
+  target_num: 2000
+  num_candidates: 5
+  max_per_class: 30
+  conf_min: 0.999
+  max_attempts: 10000000
+  confidence: 0.999
+  input_path: "./search_data/coarse.npz"
+  output_path: "./search_data/fine.npz"
+  beam_size: 5
+  max_steps: 10
+  flip_per_step: 5
+  alpha: 1.0
+  beta: 0.02
+  gamma: 0.001
+  seed: 42
+
+stage3:
+
+  lr: 0.001
+  num_rounds: 4 
+  attack_epochs: 200 
+
+poisoning:
+  lr_poison: 0.0005         # poisoned client learning rate
+  lr_clean: 0.002           # clean client learning rate
+  epochs_poison: 50         # poisoned client local epochs
+  epochs_clean: 20           # clean client local epochs
+  lambda_target: 0.5        # loss weight for poisoned samples
+  num_rounds: 5            # number of FL communication rounds
+
